@@ -10,9 +10,8 @@
 
 <div class="app">
 
-  <!-- HOME SCREEN -->
+  <!-- HOME -->
   <div id="homeScreen" class="screen active">
-
     <h1>Activity Reminder</h1>
 
     <p class="info">
@@ -32,29 +31,31 @@
       <p id="timer">Time: 0s</p>
       <p id="status">Status: Waiting...</p>
     </div>
-
   </div>
 
-  <!-- ACTIVITY SCREEN -->
+  <!-- ACTIVITIES -->
   <div id="activityScreen" class="screen">
     <h2>Select Activity</h2>
-
     <div class="button-group">
-      <button onclick="startExercise('squats')">Squats</button>
-      <button onclick="startExercise('jumping')">Jumping Jacks</button>
-      <button onclick="startExercise('pushups')">Pushups</button>
+      <button onclick="startExercise('Squats')">Squats</button>
+      <button onclick="startExercise('Jumping Jacks')">Jumping Jacks</button>
+      <button onclick="startExercise('Pushups')">Pushups</button>
       <button onclick="startStretch()">Stretch</button>
     </div>
   </div>
 
-  <!-- EXERCISE SCREEN -->
+  <!-- EXERCISE -->
   <div id="exerciseScreen" class="screen">
     <h2 id="exerciseTitle"></h2>
 
     <div class="card">
-      <p id="counter">0 / 10</p>
+      <p id="counter"></p>
       <p id="exerciseStatus">Get ready...</p>
-      <button onclick="beginStretchStep()">BEGIN</button>
+
+      <div class="button-group">
+        <button id="beginBtn" onclick="beginAction()">BEGIN</button>
+        <button id="pauseBtn" onclick="togglePause()">Pause</button>
+      </div>
     </div>
   </div>
 
