@@ -37,7 +37,7 @@ body {
   margin-bottom: 15px;
 }
 
-/* moving background (simple animated gradient) */
+/* moving background */
 .moving {
   background: linear-gradient(270deg, #a8e6cf, #56c596);
   background-size: 400% 400%;
@@ -51,7 +51,6 @@ body {
   animation: moveBG 8s ease infinite;
 }
 
-/* animation */
 @keyframes moveBG {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
