@@ -1,6 +1,7 @@
 let mode = "idle";
 let tracking = false;
 let steps = 0;
+
 let lastMove = 0;
 let lastMovementTime = Date.now();
 let startTime = Date.now();
@@ -13,6 +14,9 @@ let movePromptShown = false;
 
 let stretchIndex = 0;
 let stretchTimer = null;
+
+// smoothing buffer
+let motionBuffer = [];
 
 const stretches = [
   "Touch your toes",
@@ -33,17 +37,23 @@ function goHome() {
   showScreen("homeScreen");
 }
 
+// 🔥 FIXED THIS (your button now works)
+function showActivities() {
+  showScreen("activityScreen");
+}
+
 // -------- DATA --------
 function clearData() {
   steps = 0;
   startTime = Date.now();
+  lastMovementTime = Date.now();
   updateUI();
+  document.getElementById("status").innerText = "Status: Reset!";
 }
 
 // -------- TRACKING --------
 function startTracking() {
-  // clean restart every time
-  stopTracking();
+  stopTracking(); // clean restart
 
   tracking = true;
   mode = "tracking";
@@ -74,7 +84,7 @@ function attachSensors() {
   window.addEventListener("deviceorientation", handleOrientation);
 }
 
-// -------- MOTION --------
+// -------- MOTION (PRO SMOOTHING) --------
 function handleMotion(e) {
   if (!tracking || paused) return;
 
@@ -82,12 +92,20 @@ function handleMotion(e) {
   if (!acc) return;
 
   const mag = Math.sqrt(acc.x**2 + acc.y**2 + acc.z**2);
+
+  // smoothing buffer
+  motionBuffer.push(mag);
+  if (motionBuffer.length > 5) motionBuffer.shift();
+
+  const avgMag = motionBuffer.reduce((a,b)=>a+b,0) / motionBuffer.length;
+
   const now = Date.now();
 
-  if (mag > 11 && now - lastMove > 400) {
+  if (avgMag > 11 && now - lastMove > 450) {
     lastMove = now;
     lastMovementTime = now;
 
+    // TRACKING MODE
     if (mode === "tracking") {
       steps++;
       document.body.className = "moving";
@@ -95,9 +113,11 @@ function handleMotion(e) {
       updateUI();
     }
 
+    // EXERCISE MODE
     if (mode === "exercise") {
       count++;
       document.getElementById("counter").innerText = `${count} / 10`;
+
       if (count >= 10) finishExercise();
     }
   }
@@ -107,9 +127,10 @@ function handleMotion(e) {
 function handleOrientation(e) {
   if (!tracking) return;
 
-  if ((Math.abs(e.beta) > 45 || Math.abs(e.gamma) > 45) && !wobbleCooldown) {
+  if ((Math.abs(e.beta) > 50 || Math.abs(e.gamma) > 50) && !wobbleCooldown) {
     wobbleCooldown = true;
-    document.getElementById("status").innerText = "⚠️ You seem wobbly";
+
+    document.getElementById("status").innerText = "⚠️ Unstable - steady yourself";
 
     setTimeout(() => wobbleCooldown = false, 4000);
   }
@@ -131,6 +152,7 @@ setInterval(() => {
     movePromptShown = true;
     confirm("Move a little?");
   }
+
 }, 1000);
 
 // -------- EXERCISE --------
@@ -140,7 +162,7 @@ function startExercise(type) {
 
   document.getElementById("exerciseTitle").innerText = type;
   document.getElementById("counter").innerText = "0 / 10";
-  document.getElementById("exerciseStatus").innerText = "Get ready...";
+  document.getElementById("exerciseStatus").innerText = "Start moving!";
 
   showScreen("exerciseScreen");
 }
@@ -152,6 +174,7 @@ function finishExercise() {
 
 function showCongrats() {
   const el = document.createElement("div");
+
   el.innerHTML = "🎉 YAAAAAYYYYYY<br>Congrats YOU DID IT!!!!!";
   Object.assign(el.style, {
     position: "fixed",
@@ -160,7 +183,8 @@ function showCongrats() {
     transform: "translate(-50%, -50%)",
     background: "white",
     padding: "20px",
-    borderRadius: "15px"
+    borderRadius: "15px",
+    fontSize: "20px"
   });
 
   document.body.appendChild(el);
@@ -196,9 +220,10 @@ function beginAction() {
 
     if (time <= 0) {
       clearInterval(stretchTimer);
-      alert("GREAT JOB!!!");
 
+      alert("GREAT JOB!!!");
       stretchIndex++;
+
       if (stretchIndex >= stretches.length) {
         alert("🎉 YOU DID IT!!!!");
         goHome();
@@ -212,7 +237,8 @@ function beginAction() {
 // -------- PAUSE --------
 function togglePause() {
   paused = !paused;
-  document.getElementById("pauseBtn").innerText = paused ? "Resume" : "Pause";
+  document.getElementById("pauseBtn").innerText =
+    paused ? "Resume" : "Pause";
 }
 
 // -------- UI --------
