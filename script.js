@@ -15,7 +15,6 @@ let movePromptShown = false;
 let stretchIndex = 0;
 let stretchTimer = null;
 
-// smoothing buffer
 let motionBuffer = [];
 
 const stretches = [
@@ -31,14 +30,17 @@ function showScreen(id) {
   document.getElementById(id).classList.add("active");
 }
 
+// 🔥 FIXED NAVIGATION (IMPORTANT)
 function goHome() {
+  stopTracking();
   mode = "idle";
   clearInterval(stretchTimer);
   showScreen("homeScreen");
 }
 
-// 🔥 FIXED THIS (your button now works)
 function showActivities() {
+  stopTracking(); // 🔥 prevents conflicts
+  mode = "idle";
   showScreen("activityScreen");
 }
 
@@ -48,12 +50,12 @@ function clearData() {
   startTime = Date.now();
   lastMovementTime = Date.now();
   updateUI();
-  document.getElementById("status").innerText = "Status: Reset!";
+  document.getElementById("status").innerText = "Reset complete";
 }
 
 // -------- TRACKING --------
 function startTracking() {
-  stopTracking(); // clean restart
+  stopTracking(); // always clean start
 
   tracking = true;
   mode = "tracking";
@@ -70,7 +72,6 @@ function startTracking() {
 
 function stopTracking() {
   tracking = false;
-  mode = "idle";
 
   window.removeEventListener("devicemotion", handleMotion);
   window.removeEventListener("deviceorientation", handleOrientation);
@@ -84,7 +85,7 @@ function attachSensors() {
   window.addEventListener("deviceorientation", handleOrientation);
 }
 
-// -------- MOTION (PRO SMOOTHING) --------
+// -------- MOTION (SMOOTHED) --------
 function handleMotion(e) {
   if (!tracking || paused) return;
 
@@ -93,7 +94,6 @@ function handleMotion(e) {
 
   const mag = Math.sqrt(acc.x**2 + acc.y**2 + acc.z**2);
 
-  // smoothing buffer
   motionBuffer.push(mag);
   if (motionBuffer.length > 5) motionBuffer.shift();
 
@@ -105,7 +105,6 @@ function handleMotion(e) {
     lastMove = now;
     lastMovementTime = now;
 
-    // TRACKING MODE
     if (mode === "tracking") {
       steps++;
       document.body.className = "moving";
@@ -113,7 +112,6 @@ function handleMotion(e) {
       updateUI();
     }
 
-    // EXERCISE MODE
     if (mode === "exercise") {
       count++;
       document.getElementById("counter").innerText = `${count} / 10`;
@@ -157,6 +155,8 @@ setInterval(() => {
 
 // -------- EXERCISE --------
 function startExercise(type) {
+  stopTracking(); // 🔥 ensures clean mode
+
   mode = "exercise";
   count = 0;
 
@@ -193,6 +193,8 @@ function showCongrats() {
 
 // -------- STRETCH --------
 function startStretch() {
+  stopTracking();
+
   mode = "stretch";
   stretchIndex = 0;
   showScreen("exerciseScreen");
