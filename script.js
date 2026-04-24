@@ -155,8 +155,6 @@ function startExercise(type) {
 function finishExercise() {
   showCongrats();
 
-  if (!confirm("Continue?")) goHome();
-  else count = 0;
 }
 
 function showCongrats() {
