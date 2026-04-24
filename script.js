@@ -1,14 +1,29 @@
+let mode = "idle"; // tracking | exercise | stretch
+
 let tracking = false;
 let steps = 0;
 let lastMove = 0;
 let lastMovementTime = Date.now();
 let startTime = Date.now();
 
-let exercise = null;
 let count = 0;
+let exerciseType = "";
 
 let wobbleCooldown = false;
 let movePromptShown = false;
+
+let paused = false;
+
+// stretch
+let stretchIndex = 0;
+let stretchTimer = null;
+
+const stretches = [
+  "Touch your toes",
+  "Reach up: in 4s, hold 4s, out 4s",
+  "Standing twist",
+  "Arm stretch"
+];
 
 // NAV
 function showScreen(id) {
@@ -17,7 +32,9 @@ function showScreen(id) {
 }
 
 function goHome() {
-  exercise = null;
+  mode = "idle";
+  count = 0;
+  clearInterval(stretchTimer);
   showScreen("homeScreen");
 }
 
@@ -25,7 +42,7 @@ function showActivities() {
   showScreen("activityScreen");
 }
 
-// CLEAR DATA
+// CLEAR
 function clearData() {
   steps = 0;
   startTime = Date.now();
@@ -38,6 +55,7 @@ function clearData() {
 function startTracking() {
   if (tracking) return;
   tracking = true;
+  mode = "tracking";
 
   if (typeof DeviceMotionEvent.requestPermission === "function") {
     DeviceMotionEvent.requestPermission().then(p => {
@@ -48,6 +66,7 @@ function startTracking() {
 
 function stopTracking() {
   tracking = false;
+  mode = "idle";
   window.removeEventListener("devicemotion", handleMotion);
   window.removeEventListener("deviceorientation", handleOrientation);
 }
@@ -67,7 +86,8 @@ function handleMotion(e) {
   let mag = Math.sqrt(acc.x**2 + acc.y**2 + acc.z**2);
   let now = Date.now();
 
-  if (mag > 11 && mag < 20 && now - lastMove > 400) {
+  // tracking steps
+  if (mode === "tracking" && mag > 11 && now - lastMove > 400) {
     steps++;
     lastMove = now;
     lastMovementTime = now;
@@ -77,7 +97,8 @@ function handleMotion(e) {
     document.body.className = "moving";
   }
 
-  if (exercise && mag > 14 && now - lastMove > 400) {
+  // exercise reps
+  if (mode === "exercise" && mag > 14 && now - lastMove > 400) {
     count++;
     lastMove = now;
 
@@ -87,13 +108,12 @@ function handleMotion(e) {
   }
 }
 
-// WOBBLE (NO SPAM)
+// WOBBLE (no spam)
 function handleOrientation(e) {
   if (!tracking) return;
 
   if ((Math.abs(e.beta) > 45 || Math.abs(e.gamma) > 45) && !wobbleCooldown) {
     wobbleCooldown = true;
-
     document.getElementById("status").innerText =
       "⚠️ You seem wobbly. Sit down?";
 
@@ -108,35 +128,41 @@ setInterval(() => {
 
   let inactive = (Date.now() - lastMovementTime)/1000;
 
-  if (inactive > 5) {
+  if (inactive > 5 && mode === "tracking") {
     document.getElementById("status").innerText = "🪑 Still";
     document.body.className = "still";
   }
 
-  // ONLY AFTER 5 MINUTES
   if (inactive > 300 && !movePromptShown) {
     movePromptShown = true;
-    if (confirm("Move a little?")) movePromptShown = false;
+    confirm("Move a little?");
   }
-
 }, 1000);
 
-// EXERCISES
+// EXERCISE
 function startExercise(type) {
-  exercise = type;
+  mode = "exercise";
+  exerciseType = type;
   count = 0;
 
   document.getElementById("exerciseTitle").innerText = type;
   document.getElementById("counter").innerText = "0 / 10";
+  document.getElementById("exerciseStatus").innerText = "Get ready...";
 
   showScreen("exerciseScreen");
 }
 
-// 🎉 BIG FINISH
 function finishExercise() {
+  showCongrats();
+
+  if (!confirm("Continue?")) goHome();
+  else count = 0;
+}
+
+function showCongrats() {
   let msg = document.createElement("div");
 
-  msg.innerHTML = "🎉 YAAAAAYYYYYY <br> Congrats YOU DID IT!!!!!";
+  msg.innerHTML = "🎉 YAAAAAYYYYYY<br>Congrats YOU DID IT!!!!!";
   msg.style.position = "fixed";
   msg.style.top = "40%";
   msg.style.left = "50%";
@@ -144,27 +170,14 @@ function finishExercise() {
   msg.style.background = "white";
   msg.style.padding = "20px";
   msg.style.borderRadius = "15px";
-  msg.style.fontSize = "20px";
 
   document.body.appendChild(msg);
-
   setTimeout(() => msg.remove(), 3000);
-
-  if (!confirm("Continue?")) goHome();
-  else count = 0;
 }
 
-// STRETCH FLOW
-let stretchSteps = [
-  "Touch your toes",
-  "Breathe in 4 sec, hold 4 sec, out 4 sec",
-  "Standing twist",
-  "Arm stretch"
-];
-
-let stretchIndex = 0;
-
+// STRETCH
 function startStretch() {
+  mode = "stretch";
   stretchIndex = 0;
   showScreen("exerciseScreen");
   updateStretch();
@@ -172,31 +185,43 @@ function startStretch() {
 
 function updateStretch() {
   document.getElementById("exerciseTitle").innerText = "Stretch";
-  document.getElementById("exerciseStatus").innerText = stretchSteps[stretchIndex];
+  document.getElementById("counter").innerText = "";
+  document.getElementById("exerciseStatus").innerText = stretches[stretchIndex];
 }
 
-function beginStretchStep() {
+function beginAction() {
+  if (mode === "stretch") runStretch();
+}
+
+function runStretch() {
   let time = 30;
 
-  let interval = setInterval(() => {
-    time--;
-    document.getElementById("exerciseStatus").innerText =
-      stretchSteps[stretchIndex] + " - " + time + "s";
+  stretchTimer = setInterval(() => {
+    if (!paused) {
+      time--;
+      document.getElementById("exerciseStatus").innerText =
+        stretches[stretchIndex] + " - " + time + "s";
+    }
 
     if (time <= 0) {
-      clearInterval(interval);
+      clearInterval(stretchTimer);
 
       alert("GREAT JOB!!!");
-
       stretchIndex++;
 
-      if (stretchIndex >= stretchSteps.length) {
+      if (stretchIndex >= stretches.length) {
         alert("🎉 HORAAAYYYY YAAAY YOU DID IT!!!!");
         goHome();
       } else {
         updateStretch();
       }
     }
-
   }, 1000);
+}
+
+// PAUSE
+function togglePause() {
+  paused = !paused;
+  document.getElementById("pauseBtn").innerText =
+    paused ? "Resume" : "Pause";
 }
