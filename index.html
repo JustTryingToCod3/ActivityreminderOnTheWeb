@@ -2,25 +2,21 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Activity Reminder</title>
+<title>Activity App</title>
 <link rel="stylesheet" href="style.css">
 </head>
 
 <body id="body">
 
-<!-- Home button always visible -->
-<button id="homeBtn" onclick="goHome()">🏠 Home</button>
-
 <div class="app">
 
   <!-- HOME SCREEN -->
   <div id="homeScreen" class="screen active">
-
     <h1>Activity Reminder</h1>
 
     <p class="info">
-      This app uses your phone’s sensors to track movement, detect activity,
-      and guide you through exercises. Tap start to begin.
+      This app uses your phone sensors to track movement, detect instability,
+      and guide you through exercises.
     </p>
 
     <div class="button-group">
@@ -34,13 +30,11 @@
       <p id="timer">Time: 0s</p>
       <p id="status">Status: Waiting...</p>
     </div>
-
   </div>
 
   <!-- ACTIVITY SCREEN -->
   <div id="activityScreen" class="screen">
     <h2>Select Activity</h2>
-
     <div class="button-group">
       <button onclick="startExercise('squats')">Squats</button>
       <button onclick="startExercise('jumping')">Jumping Jacks</button>
@@ -56,10 +50,14 @@
     <div class="card">
       <p id="counter">0 / 10</p>
       <p id="exerciseStatus">Get ready...</p>
+      <button id="pauseBtn" onclick="togglePause()">Pause</button>
     </div>
   </div>
 
 </div>
+
+<!-- HOME BUTTON BOTTOM -->
+<button id="homeBtn" onclick="goHome()">🏠 Home</button>
 
 <script src="script.js"></script>
 </body>
