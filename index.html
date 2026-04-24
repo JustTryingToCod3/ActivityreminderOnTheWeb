@@ -1,25 +1,30 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Activity Tracker</title>
+  <title>Activity Reminder</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body id="body">
 
-<h1>Activity Tracker</h1>
+<div class="container">
 
-<button onclick="startTracking()">Start Tracking</button>
-<button onclick="simulateStep()">Simulate Step</button>
-<button onclick="startTracking()">Start Tracking</button>
+  <h1>Activity Reminder</h1>
 
-<p id="steps">Steps (shakes): 0</p>
-<p id="status">Status: Waiting...</p>
+  <p class="info">
+    This app tracks your movement using your phone sensors.
+    It detects when you are walking, still, or unbalanced and provides helpful reminders.
+  </p>
 
-<p id="steps">Steps: 0</p>
-<p id="timer">Time: 0s</p>
-<p id="status">Status: Waiting...</p>
+  <button id="startBtn" onclick="startTracking()">Start Tracking</button>
+
+  <div class="card">
+    <p id="steps">Steps: 0</p>
+    <p id="timer">Time: 0s</p>
+    <p id="status">Status: Waiting...</p>
+  </div>
+
+</div>
 
 <script src="script.js"></script>
-
 </body>
 </html>
