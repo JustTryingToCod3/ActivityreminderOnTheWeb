@@ -1,6 +1,6 @@
 body {
   margin: 0;
-  font-family: Arial;
+  font-family: Arial, sans-serif;
   background: white;
   display: flex;
   justify-content: center;
@@ -50,6 +50,11 @@ button {
   text-align: center;
 }
 
+.info {
+  text-align: center;
+}
+
+/* movement states */
 .moving {
   background: linear-gradient(270deg, #a8e6cf, #56c596);
 }
