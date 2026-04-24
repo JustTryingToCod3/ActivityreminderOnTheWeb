@@ -20,9 +20,9 @@ let stretchTimer = null;
 
 const stretches = [
   "Touch your toes",
-  "Reach up: in 4s, hold 4s, out 4s",
-  "Standing twist",
-  "Arm stretch"
+  "Reach up to the sky! Breath in in 4s, hold 4s,  breath out out 4s",
+  "Stand and twist",
+  "Arm stretches!"
 ];
 
 // NAV
