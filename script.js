@@ -1,76 +1,82 @@
 let tracking = false;
 let steps = 0;
+let lastMove = 0;
+let lastMovementTime = Date.now();
+let startTime = Date.now();
+
 let exercise = null;
 let count = 0;
-let startTime = Date.now();
-let motionListener = null;
 
-// -------- NAVIGATION --------
+let paused = false;
+let stretchIndex = 0;
+let stretchTimer = null;
+
+// -------- NAV --------
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
 function goHome() {
+  exercise = null;
   showScreen("homeScreen");
-  resetExercise();
 }
 
 function showActivities() {
   showScreen("activityScreen");
 }
 
-function showScreen(id) {
-  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
-}
-
 // -------- TRACKING --------
 function startTracking() {
-  if (tracking) return; // prevent duplicates
-
+  if (tracking) return;
   tracking = true;
+
   startTime = Date.now();
 
-  motionListener = function(event) {
-    handleMotion(event);
-  };
-
-  window.addEventListener("devicemotion", motionListener);
-
-  document.getElementById("status").innerText = "Tracking...";
+  if (typeof DeviceMotionEvent.requestPermission === "function") {
+    DeviceMotionEvent.requestPermission().then(p => {
+      if (p === "granted") startSensors();
+    });
+  } else {
+    startSensors();
+  }
 }
 
 function stopTracking() {
   tracking = false;
+  window.removeEventListener("devicemotion", handleMotion);
+  window.removeEventListener("deviceorientation", handleOrientation);
+}
 
-  if (motionListener) {
-    window.removeEventListener("devicemotion", motionListener);
-  }
-
-  document.getElementById("status").innerText = "Stopped";
+function startSensors() {
+  window.addEventListener("devicemotion", handleMotion);
+  window.addEventListener("deviceorientation", handleOrientation);
 }
 
 // -------- MOTION --------
-let lastMoveTime = 0;
+function handleMotion(e) {
+  if (!tracking || paused) return;
 
-function handleMotion(event) {
-  if (!tracking) return;
-
-  let acc = event.accelerationIncludingGravity;
+  let acc = e.accelerationIncludingGravity;
   if (!acc) return;
 
-  let mag = Math.sqrt(acc.x*acc.x + acc.y*acc.y + acc.z*acc.z);
+  let mag = Math.sqrt(acc.x**2 + acc.y**2 + acc.z**2);
   let now = Date.now();
 
   // STEP DETECTION
-  if (mag > 12 && now - lastMoveTime > 400) {
+  if (mag > 11 && mag < 20 && now - lastMove > 400) {
     steps++;
-    lastMoveTime = now;
+    lastMove = now;
+    lastMovementTime = now;
 
     document.getElementById("steps").innerText = "Steps: " + steps;
-    document.getElementById("status").innerText = "🚶 You are moving";
+    setMoving(true);
   }
 
-  // EXERCISE DETECTION
-  if (exercise && mag > 14 && now - lastMoveTime > 400) {
+  // EXERCISE
+  if (exercise && mag > 14 && now - lastMove > 400) {
     count++;
-    lastMoveTime = now;
+    lastMove = now;
 
     document.getElementById("counter").innerText = count + " / 10";
 
@@ -78,92 +84,124 @@ function handleMotion(event) {
   }
 }
 
+// -------- GYRO --------
+function handleOrientation(e) {
+  if (!tracking) return;
+
+  if (Math.abs(e.beta) > 45 || Math.abs(e.gamma) > 45) {
+    document.getElementById("status").innerText =
+      "⚠️ You seem wobbly. Sit down?";
+  }
+}
+
+// -------- STATE --------
+function setMoving(val) {
+  if (val) {
+    document.getElementById("status").innerText = "🚶 Moving";
+    document.body.className = "moving";
+  } else {
+    document.getElementById("status").innerText = "🪑 Still";
+    document.body.className = "still";
+  }
+}
+
 // -------- TIMER --------
 setInterval(() => {
-  let seconds = Math.floor((Date.now() - startTime) / 1000);
+  let t = Math.floor((Date.now() - startTime)/1000);
+  let el = document.getElementById("timer");
+  if (el) el.innerText = "Time: " + t + "s";
 
-  let timer = document.getElementById("timer");
-  if (timer) {
-    timer.innerText = "Time: " + seconds + "s";
+  let inactive = (Date.now() - lastMovementTime)/1000;
+
+  if (inactive > 5) setMoving(false);
+
+  if (inactive > 30 && inactive < 31) {
+    alert("Testing: you are still");
   }
+
+  if (inactive > 60) {
+    if (confirm("Would you like to move?")) {
+      setMoving(true);
+    }
+  }
+
 }, 1000);
 
 // -------- EXERCISES --------
 function startExercise(type) {
   exercise = type;
   count = 0;
-
   showScreen("exerciseScreen");
 
-  document.getElementById("exerciseTitle").innerText = type.toUpperCase();
-  document.getElementById("counter").innerText = "0 / 10";
+  document.getElementById("exerciseTitle").innerText = type;
 
-  if (type === "stretch") {
-    startStretchRoutine();
-  }
+  if (type === "stretch") startStretch();
 }
 
-function resetExercise() {
-  exercise = null;
-  count = 0;
-}
-
-// -------- FINISH --------
 function finishExercise() {
-  confetti();
-
-  let again = confirm("🎉 Great job! Continue?");
-  if (again) {
-    count = 0;
-  } else {
-    goHome();
-  }
+  alert("🎉 Great job!");
+  if (!confirm("Continue?")) goHome();
+  else count = 0;
 }
 
 // -------- STRETCH --------
-function startStretchRoutine() {
-  let stretches = [
-    "Touch your toes",
-    "Lunge left",
-    "Lunge right",
-    "Butterfly stretch",
-    "Arm stretch",
-    "Back twist"
-  ];
+let stretches = [
+  "Touch toes",
+  "Lunge left",
+  "Lunge right",
+  "Butterfly",
+  "Arm stretch",
+  "Back twist"
+];
 
-  let i = 0;
-
-  function next() {
-    if (i >= stretches.length) {
-      alert("🎉 All stretches complete!");
-      goHome();
-      return;
-    }
-
-    document.getElementById("exerciseStatus").innerText =
-      stretches[i] + " - 30 seconds";
-
-    setTimeout(() => {
-      alert("✅ Good job!");
-      i++;
-      setTimeout(next, 2000);
-    }, 30000);
-  }
-
-  next();
+function startStretch() {
+  stretchIndex = 0;
+  runStretch();
 }
 
-// -------- CONFETTI --------
-function confetti() {
-  let el = document.createElement("div");
-  el.innerText = "🎉🎉🎉";
-  el.style.fontSize = "50px";
-  el.style.position = "fixed";
-  el.style.top = "50%";
-  el.style.left = "50%";
-  el.style.transform = "translate(-50%, -50%)";
+function runStretch() {
+  if (stretchIndex >= stretches.length) {
+    alert("🎉 Done!");
+    goHome();
+    return;
+  }
 
-  document.body.appendChild(el);
+  let time = 30;
+  document.getElementById("exerciseStatus").innerText =
+    stretches[stretchIndex] + " - " + time + "s";
 
-  setTimeout(() => el.remove(), 2000);
+  stretchTimer = setInterval(() => {
+    if (!paused) {
+      time--;
+      document.getElementById("exerciseStatus").innerText =
+        stretches[stretchIndex] + " - " + time + "s";
+    }
+
+    if (time <= 0) {
+      clearInterval(stretchTimer);
+
+      let breakTime = 15;
+      let breakInterval = setInterval(() => {
+        if (!paused) {
+          breakTime--;
+          document.getElementById("exerciseStatus").innerText =
+            "Next in " + breakTime + "s";
+        }
+
+        if (breakTime <= 0) {
+          clearInterval(breakInterval);
+          stretchIndex++;
+          runStretch();
+        }
+      }, 1000);
+    }
+
+  }, 1000);
+}
+
+// -------- PAUSE --------
+function togglePause() {
+  paused = !paused;
+  document.getElementById("pauseBtn").innerText =
+    paused ? "Resume" : "Pause";
 }
