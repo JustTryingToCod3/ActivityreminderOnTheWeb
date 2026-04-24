@@ -1,18 +1,28 @@
 let steps = 0;
-let lastStepTime = 0;
-let startTime = Date.now();
 let lastMovementTime = Date.now();
+let isMoving = false;
 
+// Start tracking (must be triggered by user click on iPhone)
 function startTracking() {
+
   if (typeof DeviceMotionEvent !== "undefined" &&
       typeof DeviceMotionEvent.requestPermission === "function") {
-    DeviceMotionEvent.requestPermission().then(permission => {
-      if (permission === "granted") {
-        window.addEventListener("devicemotion", handleMotion);
-      }
-    });
+
+    DeviceMotionEvent.requestPermission()
+      .then(permission => {
+        if (permission === "granted") {
+          window.addEventListener("devicemotion", handleMotion);
+          alert("Motion tracking enabled ✅");
+        } else {
+          alert("Permission denied ❌");
+        }
+      })
+      .catch(console.error);
+
   } else {
+    // Android / Chrome
     window.addEventListener("devicemotion", handleMotion);
+    alert("Motion tracking started ✅");
   }
 }
 
@@ -28,49 +38,34 @@ function handleMotion(event) {
 
   let now = Date.now();
 
-  // STEP DETECTION
-  if (magnitude > 14 && now - lastStepTime > 400) {
+  // SHAKE = STEP
+  if (magnitude > 18) {
     steps++;
-    lastStepTime = now;
     lastMovementTime = now;
+    isMoving = true;
 
-    document.getElementById("steps").innerText = "Steps: " + steps;
-    document.getElementById("status").innerText = "🚶 Moving";
-  }
+    document.getElementById("steps").innerText =
+      "Steps (shakes): " + steps;
 
-  // SHAKE DETECTION (unbalanced)
-  if (magnitude > 25) {
     document.getElementById("status").innerText =
-      "⚠️ Sudden movement detected! Are you unbalanced?";
+      "🚶 Testing: you are moving";
   }
 }
 
-// fallback button
-function simulateStep() {
-  steps++;
-  lastMovementTime = Date.now();
-  document.getElementById("steps").innerText = "Steps: " + steps;
-}
-
-// TIMER + REMINDERS
+// CHECK STILLNESS EVERY SECOND
 setInterval(() => {
   let now = Date.now();
-
-  let seconds = Math.floor((now - startTime) / 1000);
-  document.getElementById("timer").innerText = "Time: " + seconds + "s";
-
   let inactiveTime = (now - lastMovementTime) / 1000;
 
-  // INACTIVITY REMINDER (60 sec = demo version of 60 min)
-  if (inactiveTime > 60) {
-    document.getElementById("status").innerText =
-      "⏰ You've been inactive. Get up!";
-  }
+  // IF STILL FOR 30 SECONDS
+  if (inactiveTime > 30) {
+    if (isMoving) {
+      alert("Testing: you are still");
+      isMoving = false;
+    }
 
-  // OVERACTIVITY (continuous movement)
-  if (steps > 50 && seconds < 60) {
     document.getElementById("status").innerText =
-      "🔥 You've been very active. Chill for a bit.";
+      "🪑 Testing: you are still";
   }
 
 }, 1000);
