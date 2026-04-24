@@ -1,5 +1,4 @@
-let mode = "idle"; // tracking | exercise | stretch
-
+let mode = "idle";
 let tracking = false;
 let steps = 0;
 let lastMove = 0;
@@ -7,25 +6,22 @@ let lastMovementTime = Date.now();
 let startTime = Date.now();
 
 let count = 0;
-let exerciseType = "";
+let paused = false;
 
 let wobbleCooldown = false;
 let movePromptShown = false;
 
-let paused = false;
-
-// stretch
 let stretchIndex = 0;
 let stretchTimer = null;
 
 const stretches = [
   "Touch your toes",
-  "Reach up to the sky! Breath in in 4s, hold 4s,  breath out out 4s",
-  "Stand and twist",
-  "Arm stretches!"
+  "Breathe: in 4s, hold 4s, out 4s",
+  "Standing twist",
+  "Arm stretch"
 ];
 
-// NAV
+// -------- NAV --------
 function showScreen(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
@@ -33,104 +29,102 @@ function showScreen(id) {
 
 function goHome() {
   mode = "idle";
-  count = 0;
   clearInterval(stretchTimer);
   showScreen("homeScreen");
 }
 
-function showActivities() {
-  showScreen("activityScreen");
-}
-
-// CLEAR
+// -------- DATA --------
 function clearData() {
   steps = 0;
   startTime = Date.now();
-  document.getElementById("steps").innerText = "Steps: 0";
-  document.getElementById("timer").innerText = "Time: 0s";
-  document.getElementById("status").innerText = "Status: Waiting...";
+  updateUI();
 }
 
-// TRACKING
+// -------- TRACKING --------
 function startTracking() {
-  if (tracking) return;
+  // clean restart every time
+  stopTracking();
+
   tracking = true;
   mode = "tracking";
+  movePromptShown = false;
 
   if (typeof DeviceMotionEvent.requestPermission === "function") {
     DeviceMotionEvent.requestPermission().then(p => {
-      if (p === "granted") startSensors();
+      if (p === "granted") attachSensors();
     });
-  } else startSensors();
+  } else {
+    attachSensors();
+  }
 }
 
 function stopTracking() {
   tracking = false;
   mode = "idle";
+
   window.removeEventListener("devicemotion", handleMotion);
   window.removeEventListener("deviceorientation", handleOrientation);
+
+  document.body.className = "";
+  document.getElementById("status").innerText = "Stopped";
 }
 
-function startSensors() {
+function attachSensors() {
   window.addEventListener("devicemotion", handleMotion);
   window.addEventListener("deviceorientation", handleOrientation);
 }
 
-// MOTION
+// -------- MOTION --------
 function handleMotion(e) {
-  if (!tracking) return;
+  if (!tracking || paused) return;
 
-  let acc = e.accelerationIncludingGravity;
+  const acc = e.accelerationIncludingGravity;
   if (!acc) return;
 
-  let mag = Math.sqrt(acc.x**2 + acc.y**2 + acc.z**2);
-  let now = Date.now();
+  const mag = Math.sqrt(acc.x**2 + acc.y**2 + acc.z**2);
+  const now = Date.now();
 
-  // tracking steps
-  if (mode === "tracking" && mag > 11 && now - lastMove > 400) {
-    steps++;
+  if (mag > 11 && now - lastMove > 400) {
     lastMove = now;
     lastMovementTime = now;
 
-    document.getElementById("steps").innerText = "Steps: " + steps;
-    document.getElementById("status").innerText = "🚶 Moving";
-    document.body.className = "moving";
-  }
+    if (mode === "tracking") {
+      steps++;
+      document.body.className = "moving";
+      document.getElementById("status").innerText = "🚶 Moving";
+      updateUI();
+    }
 
-  // exercise reps
-  if (mode === "exercise" && mag > 14 && now - lastMove > 400) {
-    count++;
-    lastMove = now;
-
-    document.getElementById("counter").innerText = count + " / 10";
-
-    if (count >= 10) finishExercise();
+    if (mode === "exercise") {
+      count++;
+      document.getElementById("counter").innerText = `${count} / 10`;
+      if (count >= 10) finishExercise();
+    }
   }
 }
 
-// WOBBLE (no spam)
+// -------- WOBBLE --------
 function handleOrientation(e) {
   if (!tracking) return;
 
   if ((Math.abs(e.beta) > 45 || Math.abs(e.gamma) > 45) && !wobbleCooldown) {
     wobbleCooldown = true;
-    document.getElementById("status").innerText =
-      "⚠️ You seem wobbly. Sit down?";
+    document.getElementById("status").innerText = "⚠️ You seem wobbly";
 
-    setTimeout(() => wobbleCooldown = false, 5000);
+    setTimeout(() => wobbleCooldown = false, 4000);
   }
 }
 
-// TIMER
+// -------- TIMER --------
 setInterval(() => {
-  let t = Math.floor((Date.now() - startTime)/1000);
-  document.getElementById("timer").innerText = "Time: " + t + "s";
+  const t = Math.floor((Date.now() - startTime)/1000);
+  document.getElementById("timer").innerText = `Time: ${t}s`;
 
-  let inactive = (Date.now() - lastMovementTime)/1000;
+  const inactive = (Date.now() - lastMovementTime)/1000;
 
   if (inactive > 5 && mode === "tracking") {
-    document.getElementById("status").innerText = "🪑 Still";
     document.body.className = "still";
+    document.getElementById("status").innerText = "🪑 Still";
   }
 
   if (inactive > 300 && !movePromptShown) {
@@ -139,10 +133,9 @@ setInterval(() => {
   }
 }, 1000);
 
-// EXERCISE
+// -------- EXERCISE --------
 function startExercise(type) {
   mode = "exercise";
-  exerciseType = type;
   count = 0;
 
   document.getElementById("exerciseTitle").innerText = type;
@@ -154,26 +147,27 @@ function startExercise(type) {
 
 function finishExercise() {
   showCongrats();
-
+  count = 0;
 }
 
 function showCongrats() {
-  let msg = document.createElement("div");
+  const el = document.createElement("div");
+  el.innerHTML = "🎉 YAAAAAYYYYYY<br>Congrats YOU DID IT!!!!!";
+  Object.assign(el.style, {
+    position: "fixed",
+    top: "40%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    background: "white",
+    padding: "20px",
+    borderRadius: "15px"
+  });
 
-  msg.innerHTML = "🎉 YAAAAAYYYYYY<br>Congrats YOU DID IT!!!!!";
-  msg.style.position = "fixed";
-  msg.style.top = "40%";
-  msg.style.left = "50%";
-  msg.style.transform = "translate(-50%, -50%)";
-  msg.style.background = "white";
-  msg.style.padding = "20px";
-  msg.style.borderRadius = "15px";
-
-  document.body.appendChild(msg);
-  setTimeout(() => msg.remove(), 3000);
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2500);
 }
 
-// STRETCH
+// -------- STRETCH --------
 function startStretch() {
   mode = "stretch";
   stretchIndex = 0;
@@ -188,27 +182,25 @@ function updateStretch() {
 }
 
 function beginAction() {
-  if (mode === "stretch") runStretch();
-}
+  if (mode !== "stretch") return;
 
-function runStretch() {
   let time = 30;
+  clearInterval(stretchTimer);
 
   stretchTimer = setInterval(() => {
     if (!paused) {
       time--;
       document.getElementById("exerciseStatus").innerText =
-        stretches[stretchIndex] + " - " + time + "s";
+        `${stretches[stretchIndex]} - ${time}s`;
     }
 
     if (time <= 0) {
       clearInterval(stretchTimer);
-
       alert("GREAT JOB!!!");
-      stretchIndex++;
 
+      stretchIndex++;
       if (stretchIndex >= stretches.length) {
-        alert("🎉 HORAAAYYYY YAAAY YOU DID IT!!!!");
+        alert("🎉 YOU DID IT!!!!");
         goHome();
       } else {
         updateStretch();
@@ -217,9 +209,13 @@ function runStretch() {
   }, 1000);
 }
 
-// PAUSE
+// -------- PAUSE --------
 function togglePause() {
   paused = !paused;
-  document.getElementById("pauseBtn").innerText =
-    paused ? "Resume" : "Pause";
+  document.getElementById("pauseBtn").innerText = paused ? "Resume" : "Pause";
+}
+
+// -------- UI --------
+function updateUI() {
+  document.getElementById("steps").innerText = `Steps: ${steps}`;
 }
