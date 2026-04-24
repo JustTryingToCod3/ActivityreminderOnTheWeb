@@ -2,10 +2,12 @@ let steps = 0;
 let lastStepTime = 0;
 let lastMovementTime = Date.now();
 let startTime = Date.now();
+
 let isMoving = false;
 let sedentaryPromptShown = false;
 let wobbleCooldown = false;
 
+// ---- START ----
 function startTracking() {
   document.getElementById("startBtn").innerText = "Tracking...";
 
@@ -32,6 +34,8 @@ function startSensors() {
   window.addEventListener("deviceorientation", handleOrientation);
 }
 
+// ---- MOTION (STEP DETECTION) ----
+// IMPORTANT: Steps are counted REGARDLESS of wobble state
 function handleMotion(event) {
   let acc = event.accelerationIncludingGravity;
   if (!acc) return;
@@ -44,83 +48,81 @@ function handleMotion(event) {
 
   let now = Date.now();
 
-  // STEP DETECTION (walking pattern)
-  if (magnitude > 11 && magnitude < 20 && now - lastStepTime > 400) {
+  // walking-style spike window
+  if (magnitude > 11 && magnitude < 20 && (now - lastStepTime) > 350) {
     steps++;
     lastStepTime = now;
     lastMovementTime = now;
     sedentaryPromptShown = false;
 
     document.getElementById("steps").innerText = "Steps: " + steps;
+
     setMovingState();
   }
 }
 
-// GYROSCOPE / ORIENTATION (wobble detection)
+// ---- ORIENTATION (WOBBLE) ----
 function handleOrientation(event) {
-  let beta = event.beta;   // forward/back tilt
+  let beta = event.beta;   // front/back tilt
   let gamma = event.gamma; // side tilt
 
-  if (!beta || !gamma) return;
+  if (beta === null || gamma === null) return;
 
-  // detect unstable tilt
+  // wobble condition (large tilt) with cooldown
   if ((Math.abs(beta) > 45 || Math.abs(gamma) > 45) && !wobbleCooldown) {
     wobbleCooldown = true;
 
     let choice = confirm("⚠️ You seem wobbly. Would you like to sit down?");
     if (choice) {
-      document.getElementById("status").innerText =
-        "🪑 Take a moment to rest.";
+      document.getElementById("status").innerText = "🪑 Please sit and rest.";
     } else {
-      document.getElementById("status").innerText =
-        "👍 Stay safe and steady!";
+      document.getElementById("status").innerText = "👍 Stay steady and safe!";
     }
 
-    // prevent spam
+    // cooldown to avoid spam
     setTimeout(() => {
       wobbleCooldown = false;
     }, 5000);
   }
 }
 
+// ---- STATE ----
 function setMovingState() {
   isMoving = true;
   document.getElementById("status").innerText = "🚶 You are moving";
   document.getElementById("body").className = "moving";
 }
 
-// TIMER + STATE CHECK
+// ---- TIMER + LOGIC LOOP ----
 setInterval(() => {
   let now = Date.now();
-  let seconds = Math.floor((now - startTime) / 1000);
 
+  let seconds = Math.floor((now - startTime) / 1000);
   document.getElementById("timer").innerText = "Time: " + seconds + "s";
 
   let inactiveTime = (now - lastMovementTime) / 1000;
 
-  // STILL DETECTION (~5 sec)
+  // STILL DETECTION
   if (inactiveTime > 5 && isMoving) {
     isMoving = false;
     document.getElementById("status").innerText = "🪑 You are still";
     document.getElementById("body").className = "still";
   }
 
-  // 30 SECOND STILL ALERT
+  // 30s STILL ALERT
   if (inactiveTime > 30 && inactiveTime < 31) {
     alert("Testing: you are still");
   }
 
-  // 60 SECOND NUDGE
+  // 60s NUDGE
   if (inactiveTime > 60 && !sedentaryPromptShown) {
     sedentaryPromptShown = true;
 
     let choice = confirm("Would you like to move?");
     if (choice) {
-      document.getElementById("status").innerText =
-        "💪 Great! Let's move!";
+      document.getElementById("status").innerText = "💪 Great! Let's move!";
     } else {
-      document.getElementById("status").innerText =
-        "😌 Resting is okay too.";
+      document.getElementById("status").innerText = "😌 Resting is okay too.";
     }
   }
 
