@@ -30,7 +30,6 @@ function showScreen(id) {
   document.getElementById(id).classList.add("active");
 }
 
-// 🔥 FIXED NAVIGATION (IMPORTANT)
 function goHome() {
   stopTracking();
   mode = "idle";
@@ -39,7 +38,7 @@ function goHome() {
 }
 
 function showActivities() {
-  stopTracking(); // 🔥 prevents conflicts
+  stopTracking();
   mode = "idle";
   showScreen("activityScreen");
 }
@@ -55,7 +54,7 @@ function clearData() {
 
 // -------- TRACKING --------
 function startTracking() {
-  stopTracking(); // always clean start
+  stopTracking();
 
   tracking = true;
   mode = "tracking";
@@ -85,7 +84,7 @@ function attachSensors() {
   window.addEventListener("deviceorientation", handleOrientation);
 }
 
-// -------- MOTION (SMOOTHED) --------
+// -------- MOTION --------
 function handleMotion(e) {
   if (!tracking || paused) return;
 
@@ -128,7 +127,7 @@ function handleOrientation(e) {
   if ((Math.abs(e.beta) > 50 || Math.abs(e.gamma) > 50) && !wobbleCooldown) {
     wobbleCooldown = true;
 
-    document.getElementById("status").innerText = "⚠️ Unstable - steady yourself";
+    document.getElementById("status").innerText = "⚠️ Unstable";
 
     setTimeout(() => wobbleCooldown = false, 4000);
   }
@@ -155,7 +154,7 @@ setInterval(() => {
 
 // -------- EXERCISE --------
 function startExercise(type) {
-  stopTracking(); // 🔥 ensures clean mode
+  stopTracking();
 
   mode = "exercise";
   count = 0;
