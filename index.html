@@ -10,11 +10,12 @@
 
 <div class="app">
 
+  <!-- HOME -->
   <div id="homeScreen" class="screen active">
     <h1>Activity Reminder</h1>
 
     <p class="info">
-      This app uses your phone’s sensors to track movement and guide exercises.
+      This app tracks your movement using phone sensors and guides exercises.
     </p>
 
     <div class="button-group">
@@ -31,8 +32,10 @@
     </div>
   </div>
 
+  <!-- ACTIVITIES -->
   <div id="activityScreen" class="screen">
     <h2>Select Activity</h2>
+
     <div class="button-group">
       <button onclick="startExercise('Squats')">Squats</button>
       <button onclick="startExercise('Jumping Jacks')">Jumping Jacks</button>
@@ -41,6 +44,7 @@
     </div>
   </div>
 
+  <!-- EXERCISE -->
   <div id="exerciseScreen" class="screen">
     <h2 id="exerciseTitle"></h2>
 
