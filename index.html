@@ -1,29 +1,37 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Activity Reminder</title>
-  <link rel="stylesheet" href="style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Activity App</title>
+<link rel="stylesheet" href="style.css">
 </head>
+
 <body id="body">
 
-<div class="container">
+<button id="homeBtn" onclick="goHome()">🏠 Home</button>
 
-  <h1>Activity Reminder</h1>
+<div id="homeScreen" class="screen active">
+  <h1>Activity Tracker</h1>
+  <button onclick="startTracking()">Start Tracking</button>
+  <button onclick="stopTracking()">Stop Tracking</button>
+  <button onclick="showActivities()">Other Activities</button>
 
-  <p class="info">
-    This app uses your phone’s motion sensors to detect walking, stillness, and instability.
-    Tap “Start Tracking” and allow permissions.
-  </p>
+  <p id="steps">Steps: 0</p>
+  <p id="status">Waiting...</p>
+</div>
 
-  <button id="startBtn" onclick="startTracking()">Start Tracking</button>
+<div id="activityScreen" class="screen">
+  <h2>Select Activity</h2>
+  <button onclick="startExercise('squats')">Squats</button>
+  <button onclick="startExercise('jumping')">Jumping Jacks</button>
+  <button onclick="startExercise('pushups')">Pushups</button>
+  <button onclick="startExercise('stretch')">Stretch</button>
+</div>
 
-  <div class="card">
-    <p id="steps">Steps: 0</p>
-    <p id="timer">Time: 0s</p>
-    <p id="status">Status: Waiting...</p>
-  </div>
-
+<div id="exerciseScreen" class="screen">
+  <h2 id="exerciseTitle"></h2>
+  <p id="counter">0 / 10</p>
+  <p id="exerciseStatus"></p>
 </div>
 
 <script src="script.js"></script>
