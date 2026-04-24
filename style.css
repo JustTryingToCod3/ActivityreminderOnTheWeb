@@ -1,58 +1,26 @@
 body {
-  margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: Arial;
   text-align: center;
-  transition: background 0.5s ease;
+  background: #f0f8ff;
 }
 
-/* layout */
-.container {
-  padding: 30px;
-}
-
-/* button */
-#startBtn {
-  padding: 20px 40px;
-  font-size: 24px;
-  border-radius: 15px;
-  border: none;
-  background: #4CAF50;
-  color: white;
-  margin: 20px;
-}
-
-/* card */
-.card {
-  background: white;
-  padding: 25px;
-  margin-top: 20px;
-  border-radius: 15px;
-  box-shadow: 0px 4px 12px rgba(0,0,0,0.2);
-  font-size: 22px;
-}
-
-/* info text */
-.info {
+button {
+  padding: 15px;
+  margin: 10px;
   font-size: 18px;
-  margin-bottom: 15px;
+  border-radius: 10px;
 }
 
-/* moving background */
-.moving {
-  background: linear-gradient(270deg, #a8e6cf, #56c596);
-  background-size: 400% 400%;
-  animation: moveBG 5s ease infinite;
+#homeBtn {
+  position: fixed;
+  top: 10px;
+  left: 10px;
 }
 
-/* still background */
-.still {
-  background: linear-gradient(270deg, #d3d3d3, #9e9e9e);
-  background-size: 400% 400%;
-  animation: moveBG 8s ease infinite;
+.screen {
+  display: none;
 }
 
-@keyframes moveBG {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+.active {
+  display: block;
 }
