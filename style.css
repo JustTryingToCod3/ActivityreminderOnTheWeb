@@ -53,18 +53,17 @@ button {
   text-align: center;
 }
 
-/* info */
 .info {
   text-align: center;
 }
 
-/* states */
+/* movement states */
 .moving {
   background: linear-gradient(270deg, #a8e6cf, #56c596);
 }
 
 .still {
-  background: linear-gradient(270deg, #d3d3d3, #9e9e9e);
+  background: linear-gradient(270deg, #e0e0e0, #9e9e9e);
 }
 
 /* home button */
