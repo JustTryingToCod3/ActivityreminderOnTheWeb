@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Activity App</title>
+<title>Activity Reminder</title>
 <link rel="stylesheet" href="style.css">
 </head>
 
@@ -10,18 +10,21 @@
 
 <div class="app">
 
-  <!-- HOME -->
+  <!-- HOME SCREEN -->
   <div id="homeScreen" class="screen active">
+
     <h1>Activity Reminder</h1>
 
     <p class="info">
-      Move, stay balanced, and stay healthy. Tap start to begin tracking.
+      This app uses your phone’s sensors to track movement, detect activity,
+      and guide you through exercises.
     </p>
 
     <div class="button-group">
       <button onclick="startTracking()">Start Tracking</button>
       <button onclick="stopTracking()">Stop Tracking</button>
       <button onclick="showActivities()">Other Activities</button>
+      <button onclick="clearData()">Clear Data</button>
     </div>
 
     <div class="card">
@@ -29,32 +32,29 @@
       <p id="timer">Time: 0s</p>
       <p id="status">Status: Waiting...</p>
     </div>
+
   </div>
 
-  <!-- ACTIVITIES -->
+  <!-- ACTIVITY SCREEN -->
   <div id="activityScreen" class="screen">
     <h2>Select Activity</h2>
+
     <div class="button-group">
       <button onclick="startExercise('squats')">Squats</button>
       <button onclick="startExercise('jumping')">Jumping Jacks</button>
       <button onclick="startExercise('pushups')">Pushups</button>
-      <button onclick="startExercise('stretch')">Stretch</button>
+      <button onclick="startStretch()">Stretch</button>
     </div>
   </div>
 
-  <!-- EXERCISE -->
+  <!-- EXERCISE SCREEN -->
   <div id="exerciseScreen" class="screen">
     <h2 id="exerciseTitle"></h2>
 
     <div class="card">
       <p id="counter">0 / 10</p>
       <p id="exerciseStatus">Get ready...</p>
-
-      <div class="progress-bar">
-        <div id="progress"></div>
-      </div>
-
-      <button id="pauseBtn" onclick="togglePause()">Pause</button>
+      <button onclick="beginStretchStep()">BEGIN</button>
     </div>
   </div>
 
