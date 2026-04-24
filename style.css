@@ -1,13 +1,48 @@
 body {
+  margin: 0;
+  font-family: Arial, sans-serif;
   text-align: center;
-  font-family: Arial;
-  background: lightblue;
+  transition: background 0.5s ease;
+}
+
+/* container */
+.container {
   padding: 30px;
 }
 
-button {
-  padding: 15px;
-  margin: 10px;
+/* big button */
+#startBtn {
+  padding: 20px 40px;
+  font-size: 22px;
+  border-radius: 15px;
+  border: none;
+  background: #4CAF50;
+  color: white;
+  margin: 20px;
+}
+
+/* card */
+.card {
+  background: white;
+  padding: 20px;
+  margin-top: 20px;
+  border-radius: 15px;
+  box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
+  font-size: 20px;
+}
+
+/* info text */
+.info {
   font-size: 16px;
-  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+/* moving animation */
+.moving {
+  background: linear-gradient(to right, #a8e6cf, #56c596);
+}
+
+/* still animation */
+.still {
+  background: linear-gradient(to right, #d3d3d3, #a9a9a9);
 }
